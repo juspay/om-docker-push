@@ -2,7 +2,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    omnix.url = "github:juspay/omnix";
   };
 
   outputs = inputs:
@@ -15,19 +14,19 @@
           name = "om-docker-push";
           runtimeInputs = with pkgs; [ jq cachix ];
           text = ''
-            if [[ $# -ne 3 ]]; then
-              echo "Usage: $0 <FLAKE> <REMOTE_ADDRESS> <CACHE_NAME>"
+            if [[ $# -ne 4 ]]; then
+              echo "Usage: $0 <PROJECT> <BRANCH> <COMMIT> <CACHE_NAME>"
               exit 1
             fi
             
-            sub_flake="$1"
-            remote_address="$2"
-            cache_name="$3"
+            project="$1"
+            branch="$2"
+            commit="$3"
+            cache_name="$4"
 
-            ${lib.getExe inputs.omnix.packages.${system}.default} ci run --on ssh://"$remote_address" "$sub_flake#dockerImage"
-
-            DOCKERIMAGE=$(jq -r '.result.ROOT.build.byName | to_entries[] | select(.key | test("^docker-image-.*$")) | .value' < result)
-            echo "Pushing DockerImage binaries to $cache_name.cachix.org"
+            FLAKE="git+ssh://git@ssh.bitbucket.juspay.net/$project?ref=$branch&rev=$commit"
+            DOCKERIMAGE=$(nix build --no-link --print-out-paths "$FLAKE"#dockerImage)
+            echo "Pushing Store Paths for Docker Image"
             echo "$DOCKERIMAGE"
             cachix push "$cache_name" "$DOCKERIMAGE"
 

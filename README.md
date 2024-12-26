@@ -1,34 +1,43 @@
 # om-docker-push
 
-A flake app to **build flake outputs on remote machine and push** `dockerImage` store paths [built by Omnix](https://omnix.page/om/ci.html) to cachix.
+A flake app to **build dockerImage and push** store paths to cachix.
 
 ## Overview
 This tool streamlines the process of:
 
-1. Building flake outputs remotely using [`om ci`](https://omnix.page/om/ci.html)
-2. Automatically transfers all build outputs back to the host machine via the result symlink.
-3. Identifies and pushes only the dockerImage store paths to the specified [`Cachix`](https://cachix.org) cache.
+1. Building flake output `dockerImage`.
+2. Pushes the dockerImage store paths to the specified [`Cachix`](https://cachix.org) cache.
 
 ## Prerequisites
 
-- Nix with flakes enabled
 - SSH access to the remote machine
+- Nix with flakes enabled
 - Cachix authentication token
 
 ## Usage
 
 To use `om-docker-push`, run the following command:
 
+First, connect to the remote machine using
+
 ```sh
-nix run github:juspay/om-docker-push <FLAKE> <REMOTE_ADDRESS> <CACHE_NAME>
+ssh <USER>@<IP>
 ```
-- \<FLAKE\>: The flake or sub-flake you wish to build. Can be a local flake (like .#dockerImage) or a remote one (like github:org/repo#someOutput).
-- <REMOTE_ADDRESS>: The SSH address of the remote machine where the build will occur (e.g., user@hostname or user@ip).
+
+And then run the following command to run `om-docker-push`
+
+```sh
+nix run github:juspay/om-docker-push <PROJECT> <BRANCH> <COMMIT> <CACHE_NAME>
+```
+where
+- \<PROJECT\>: The name of Project(Bitbucket) + Repository name. For example, `jbiz/euler-api-order`
+- \<BRANCH\>: Name of the branch.
+- \<COMMIT\>: Commit respect to which build needs to run.
 - <CACHE_NAME>: The name of your Cachix cache where nix store paths will be pushed.
 
 Example:
 
 ```sh
-nix run github:juspay/om-docker-push .#dockerImage john@<IP> mycache
+nix run github:juspay/om-docker-push jbiz/euler-api-order main 581176066fbd18906443e463283fjfj982js09j mycache
 ```
 
